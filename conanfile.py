@@ -43,15 +43,15 @@ class SwigConan(ConanFile):
         with tools.chdir(os.path.abspath(self._source_subfolder)):
             args = ["--disable-dependency-tracking", "--without-alllang"]
             args.append('--prefix={}'.format(build_folder))
-            self.run('./autogen.sh')
+            self.run('./autogen.sh', win_bash=True)
             env_build = AutoToolsBuildEnvironment(self)
             env_build.configure(args=args)
-            env_build.make()
-            env_build.make(args=['install'])
-            with tools.chdir(os.path.join(build_folder, "bin")):
-                self.run("ls -l swig")
-                self.run("strip swig")
-                self.run("strip ccache-swig")
+            env_build.make(win_bash=True)
+            env_build.make(args=['install'], win_bash=True)
+            if not self.settings.os_build=="Windows":
+                with tools.chdir(os.path.join(build_folder, "bin")):
+                    self.run("strip swig")
+                    self.run("strip ccache-swig")
 
     def package(self):
         self.build()
