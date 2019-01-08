@@ -44,7 +44,7 @@ class SwigConan(ConanFile):
             args = ["--disable-dependency-tracking", "--without-alllang"]
             args.append('--prefix={}'.format(build_folder))
             if win_bash:
-                self.run("pacman -S autoconf automake")
+                self.run("pacman -S autoconf automake", win_bash=win_bash)
             self.run('./autogen.sh', win_bash=win_bash)
             env_build = AutoToolsBuildEnvironment(self)
             env_build.configure(args=args)
