@@ -2,7 +2,7 @@
 
 | Bintray | Windows | Linux & macOS |
 |:--------:|:---------:|:-----------------:|
-|[![Download](https://api.bintray.com/packages/bincrafters/public-conan/conan-swig%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/conan-swig%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/github/bincrafters/conan-conan-swig?svg=true)](https://ci.appveyor.com/project/bincrafters/conan-conan-swig)|[![Build Status](https://travis-ci.com/bincrafters/conan-conan-swig.svg)](https://travis-ci.com/bincrafters/conan-conan-swig)|
+|[![Download](https://api.bintray.com/packages/bincrafters/public-conan/conan-swig%3Abincrafters/images/download.svg) ](https://bintray.com/bincrafters/public-conan/conan-swig%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/github/ss1978/conan-swig?svg=true)](https://ci.appveyor.com/project/ss1978/conan-swig)|[![Build Status](https://travis-ci.com/ss1978/conan-swig.svg)](https://travis-ci.com/ss1978/conan-swig)|
 
 ## Conan Information
 
