@@ -16,9 +16,10 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv virtualenv 3.7.1 conan
     pyenv rehash
     pyenv activate conan
+else
+    sudo yum install -y autoconf automake
 fi
 
-yum install autoconf automake
 pip install conan --upgrade
 pip install conan_package_tools bincrafters_package_tools
 
