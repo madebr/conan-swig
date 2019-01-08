@@ -38,16 +38,16 @@ class SwigConan(ConanFile):
     def build(self):
         if not os.path.exists(self._source_subfolder):
             self.source()
-
+        win_bash = True if self.settings.os_build=="Windows" else False
         build_folder = os.path.abspath(self._build_subfolder)
         with tools.chdir(os.path.abspath(self._source_subfolder)):
             args = ["--disable-dependency-tracking", "--without-alllang"]
             args.append('--prefix={}'.format(build_folder))
-            self.run('./autogen.sh', win_bash=self.settings.os_build=="Windows")
+            self.run('./autogen.sh', win_bash=win_bash)
             env_build = AutoToolsBuildEnvironment(self)
             env_build.configure(args=args)
-            env_build.make(win_bash=self.settings.os_build=="Windows")
-            env_build.make(args=['install'], win_bash=self.settings.os_build=="Windows")
+            env_build.make()
+            env_build.make(args=['install'])
             if not self.settings.os_build=="Windows":
                 with tools.chdir(os.path.join(build_folder, "bin")):
                     self.run("strip swig")
