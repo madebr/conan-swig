@@ -17,7 +17,7 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv rehash
     pyenv activate conan
 else
-    sudo yum install -y autoconf automake
+    sudo /usr/bin/yum install -y autoconf automake
 fi
 
 pip install conan --upgrade
