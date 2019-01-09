@@ -15,7 +15,7 @@ class SwigConan(ConanFile):
     homepage = "https://www.swig.org"
     author = ""
     license = "https://github.com/swig/swig/blob/master/LICENSE"
-    requires = "pcre/8.41@bincrafters/stable"
+    #requires = "pcre/8.41@bincrafters/stable"
     exports = ["LICENSE.md"]
     settings = "os_build", "compiler", "arch_build"
     options = {
@@ -26,12 +26,14 @@ class SwigConan(ConanFile):
         "tests": False
     }
 
+    _pcre_download_url = "https://downloads.sourceforge.net/project/pcre/pcre/8.42/pcre-8.42.tar.gz?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fpcre%2Ffiles%2Fpcre%2F8.42%2Fpcre-8.42.tar.gz%2Fdownload%3Fuse_mirror%3Dkent%26r%3Dhttps%253A%252F%252Fsourceforge.net%252Fprojects%252Fpcre%252Ffiles%252Fpcre%252F8.42%252F%26use_mirror%3Dkent&ts=1547000316"
     _download_url = "https://github.com/swig/swig/archive/rel-%s.tar.gz" % version
     _sha256 = "64971de92b8a1da0b9ffb4b51e9214bb936c4dbbc304367899cdb07280b94af6"
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
     def source(self):
+        tools.download(self._pcre_download_url, os.path.join(self._source_subfolder,"pcre-8.42.tar.gz"),overwrite=True)
         tools.get(self._download_url, sha256=self._sha256)
         extracted_dir = self.name + "-rel-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
@@ -44,9 +46,8 @@ class SwigConan(ConanFile):
         with tools.chdir(os.path.abspath(self._source_subfolder)):
             args = ["--disable-dependency-tracking", "--without-alllang"]
             args.append('--prefix={}'.format(build_folder))
-            if win_bash:
-                self.run("pacman -S autoconf automake", win_bash=win_bash)
             self.run('./autogen.sh', win_bash=win_bash)
+            self.run('./Tools/pcre-build.sh', win_bash=win_bash)
             env_build = AutoToolsBuildEnvironment(self)
             env_build.configure(args=args)
             env_build.make()
