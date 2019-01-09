@@ -59,10 +59,11 @@ class SwigConan(ConanFile):
             self.source()
         build_folder = os.path.abspath(self._build_subfolder)
         if self.settings.os_build=="Windows": 
-            mkpath(os.path.join(build_folder,"bin"))
-            shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(build_folder,"bin", "swig.exe"))
-            mkpath(os.path.join(build_folder,"share/swig/" ))
-            shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(build_folder,"share/swig/%s/" % self.version))
+            if not os.path.exists(os.path.join(build_folder,"bin", "swig.exe")):
+                mkpath(os.path.join(build_folder,"bin"))
+                shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(build_folder,"bin", "swig.exe"))
+                mkpath(os.path.join(build_folder,"share","swig"))
+                shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(build_folder,"share","swig",self.version))
         else:
             with tools.chdir(os.path.abspath(self._source_subfolder)):
                 args = ["--disable-dependency-tracking", "--without-alllang"]
