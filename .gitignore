@@ -45,9 +45,12 @@ graph_info.json
 
 # IDE
 .idea/*
+.vscode
 .project
 .pydevproject
 .settings/*
 .ropeproject/*
 ## emacs
 *~
+test_package/example.py
+test_package/test_wrap.c
