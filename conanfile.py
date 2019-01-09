@@ -58,7 +58,8 @@ class SwigConan(ConanFile):
                     self.run("strip ccache-swig")
 
     def package(self):
-        self.build()
+        if not os.path.exists(os.path.join(self._build_subfolder, "bin", "swig")):
+            self.build()
         
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
         self.copy("*", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
