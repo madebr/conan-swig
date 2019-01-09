@@ -33,10 +33,10 @@ class SwigConan(ConanFile):
     _build_subfolder = "build_subfolder"
 
     def source(self):
-        tools.download(self._pcre_download_url, os.path.join(self._source_subfolder,"pcre-8.42.tar.gz"),overwrite=True)
         tools.get(self._download_url, sha256=self._sha256)
         extracted_dir = self.name + "-rel-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
+        tools.download(self._pcre_download_url, os.path.join(self._source_subfolder,"pcre-8.42.tar.gz"),overwrite=True)
 
     def build(self):
         if not os.path.exists(self._source_subfolder):
