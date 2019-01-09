@@ -4,7 +4,6 @@
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 import os 
 import shutil
-from distutils.dir_util import mkpath
 
 class SwigConan(ConanFile):
     name = "swig"
@@ -60,9 +59,9 @@ class SwigConan(ConanFile):
         build_folder = os.path.abspath(self._build_subfolder)
         if self.settings.os_build=="Windows": 
             if not os.path.exists(os.path.join(build_folder,"bin", "swig.exe")):
-                mkpath(os.path.join(build_folder,"bin"))
+                os.makedirs(os.path.join(build_folder,"bin"))
                 shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(build_folder,"bin", "swig.exe"))
-                mkpath(os.path.join(build_folder,"share","swig"))
+                os.makedirs(os.path.join(build_folder,"share","swig"))
                 shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(build_folder,"share","swig",self.version))
         else:
             with tools.chdir(os.path.abspath(self._source_subfolder)):
