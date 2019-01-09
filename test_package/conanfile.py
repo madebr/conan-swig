@@ -6,8 +6,7 @@ from conans import ConanFile
 import os
 
 
-class TestPackageConan(ConanFile):
-
+class TestPackageConan(ConanFile):    
     def test(self):
-        self.run("swig -version")
-        self.run("swig -swiglib") # TODO we should generate some code for testing...
+        self.run("swig -python test.i")
+        assert "example.py" in os.listdir(".")
