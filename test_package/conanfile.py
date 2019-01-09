@@ -10,3 +10,4 @@ class TestPackageConan(ConanFile):
 
     def test(self):
         self.run("swig -version")
+        self.run("swig -swiglib") # TODO we should generate some code for testing...
