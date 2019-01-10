@@ -54,8 +54,6 @@ class SwigConan(ConanFile):
         On non-windows system compiling swig with embedded pcre.
         On windows, simply copying the files to the appropriate structure.
         """
-        if not os.path.exists(self._source_subfolder):
-            self.source()
         build_folder = os.path.abspath(self._build_subfolder)
         if self.settings.os_build=="Windows": 
             if not os.path.exists(os.path.join(build_folder,"bin", "swig.exe")):
@@ -78,9 +76,6 @@ class SwigConan(ConanFile):
                     self.run("strip ccache-swig")
 
     def package(self):
-        if not os.path.exists(os.path.join(self._build_subfolder, "bin", "swig")):
-            self.build()
-        
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
         self.copy("*", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
         self.copy("*", dst="share", src=os.path.join(self._build_subfolder, "share"))
