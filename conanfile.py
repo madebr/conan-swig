@@ -15,7 +15,7 @@ class SwigConan(ConanFile):
     url = "https://github.com/ss1978/conan-swig.git"
     homepage = "https://www.swig.org"
     author = ""
-    license = "https://github.com/swig/swig/blob/master/LICENSE"
+    license = "GPL-3.0"
     #requires = "pcre/8.41@bincrafters/stable"
     exports = ["LICENSE.md"]
     settings = "os_build", "compiler", "arch_build"
