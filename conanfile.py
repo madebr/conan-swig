@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
+from conans.util.env_reader import get_env
 import os 
 import shutil
+import tempfile
+
 
 class SwigConan(ConanFile):
-    name = "swig"
+    name = "swig_installer"
     version = "3.0.12"
     description = """SWIG is a software development tool that connects programs written
                      in C and C++ with a variety of high-level programming languages."""
@@ -15,74 +18,81 @@ class SwigConan(ConanFile):
     url = "https://github.com/ss1978/conan-swig.git"
     homepage = "https://www.swig.org"
     author = ""
-    license = "https://github.com/swig/swig/blob/master/LICENSE"
-    #requires = "pcre/8.41@bincrafters/stable"
+    license = "GPL-3.0"
     exports = ["LICENSE.md"]
     settings = "os_build", "compiler", "arch_build"
-    options = {
-        "tests": [True, False]
-    }
-
-    default_options = {
-        "tests": False
-    }
-
-    _pcre_download_url = "https://sourceforge.net/projects/pcre/files/pcre/8.42/pcre-8.42.tar.gz/download"
-    _download_url = "https://github.com/swig/swig/archive/rel-%s.tar.gz" % version
-    _win_download_url = "http://prdownloads.sourceforge.net/swig/swigwin-%s.zip" % version
-    _sha256 = "64971de92b8a1da0b9ffb4b51e9214bb936c4dbbc304367899cdb07280b94af6"
     _source_subfolder = "source_subfolder"
-    _build_subfolder = "build_subfolder"
 
-    def source(self):
-        """
-        On non-windows system, downloads the swig, and pcre source.
-        On windows system, downloads the binary distribution for repackaging.
-        """
-        if self.settings.os_build=="Windows": 
-            tools.get(self._win_download_url)
-            os.rename("swigwin-%s"%self.version, self._source_subfolder)
+    def _fetch_sources(self, target_folder):
+        if self.settings.os_build == "Windows":
+            filename = "{}win-{}.zip".format("swig", self.version)
+            url = "http://prdownloads.sourceforge.net/swig/swigwin-{}.zip".format(self.version)
+            sha256 = "21ce6cbe297a56b697ef6e7e92a83e75ca41dedc87e48282ab444591986c35f5"
+
+            self._download_cache_rename(url, sha256, filename, target_folder, "swigwin-{}".format(self.version), self._source_subfolder)
         else:
-            tools.get(self._download_url, sha256=self._sha256)
-            extracted_dir = self.name + "-rel-" + self.version
-            os.rename(extracted_dir, self._source_subfolder)
-            tools.download(self._pcre_download_url, os.path.join(self._source_subfolder,"pcre-8.42.tar.gz"),overwrite=True)
+            filename = "{}-rel-{}.tar.gz".format("swig", self.version)
+            url = "https://github.com/swig/swig/archive/rel-{}.tar.gz".format(self.version)
+            sha256 = "64971de92b8a1da0b9ffb4b51e9214bb936c4dbbc304367899cdb07280b94af6"
+
+            self._download_cache_rename(url, sha256, filename, target_folder, "{}-rel-{}".format("swig", self.version), self._source_subfolder)
+
+    def _download_cache_rename(self, url, sha256, filename, target_folder, rename_from, rename_to):
+        dlfilepath = os.path.join(tempfile.gettempdir(), filename)
+        if os.path.exists(dlfilepath) and not get_env("SWIG_INSTALLER_FORCE_DOWNLOAD", False):
+            self.output.info("Skipping download. Using cached {}".format(dlfilepath))
+        else:
+            tools.download(url, dlfilepath)
+        tools.check_sha256(dlfilepath, sha256)
+        tools.untargz(dlfilepath, destination=target_folder)
+        os.rename(os.path.join(target_folder, rename_from), os.path.join(target_folder, rename_to))
+
+    def build_requirements(self):
+        if self.settings.os_build != "Windows":
+            self.build_requires("pcre/8.41@bincrafters/stable")
+            self.build_requires("bison/3.0.5@bincrafters/stable")  # FIXME: bison_installer
 
     def build(self):
-        """
-        Builds the package structure.
-        On non-windows system compiling swig with embedded pcre.
-        On windows, simply copying the files to the appropriate structure.
-        """
-        build_folder = os.path.abspath(self._build_subfolder)
-        if self.settings.os_build=="Windows": 
-            if not os.path.exists(os.path.join(build_folder,"bin", "swig.exe")):
-                os.makedirs(os.path.join(build_folder,"bin"))
-                shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(build_folder,"bin", "swig.exe"))
-                os.makedirs(os.path.join(build_folder,"share","swig"))
-                shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(build_folder,"share","swig",self.version))
+        self._fetch_sources(self.build_folder)
+        if self.settings.os_build=="Windows":
+            pass
         else:
-            with tools.chdir(os.path.abspath(self._source_subfolder)):
-                args = ["--disable-dependency-tracking", "--without-alllang"]
-                args.append('--prefix={}'.format(build_folder))
+            env_build = AutoToolsBuildEnvironment(self)
+            args = [
+                "PCRE_LIBS={}".format(" ".join("-l{}".format(lib) for lib in self.deps_cpp_info["pcre"].libs)),
+                "PCRE_CPPFLAGS={}".format(""),
+            ]
+            with tools.chdir(os.path.join(self.build_folder, self._source_subfolder)):
                 self.run('./autogen.sh')
-                self.run('./Tools/pcre-build.sh')
-                env_build = AutoToolsBuildEnvironment(self)
-                env_build.configure(args=args)
-                env_build.make()
-                env_build.make(args=['install'])
-                with tools.chdir(os.path.join(build_folder, "bin")):
-                    self.run("strip swig")
-                    self.run("strip ccache-swig")
+            env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder),
+                                args=args)
+            env_build.make()
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        self.copy("*", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
-        self.copy("*", dst="share", src=os.path.join(self._build_subfolder, "share"))
+        if self.settings.os_build == "Windows":
+            self.copy("swig.exe", )
+            if not os.path.exists(os.path.join(self.build_folder,"bin", "swig.exe")):
+                os.makedirs(os.path.join(self.build_folder,"bin"))
+                shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(build_folder,"bin", "swig.exe"))
+                os.makedirs(os.path.join(self.build_folder,"share","swig"))
+                shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(build_folder,"share","swig",self.version))
+        else:
+            with tools.chdir(self.build_folder):
+                env_build = AutoToolsBuildEnvironment(self)
+                env_build.install()
+                with tools.chdir(os.path.join(self.package_folder, "bin")):
+                    self.run("strip swig")
+                    self.run("strip ccache-swig")
 
     def package_id(self):
         del self.info.settings.compiler
 
     def package_info(self):
-        self.env_info.path.append(os.path.join(self.package_folder, "bin"))
-        self.env_info.SWIG_LIB=os.path.join(self.package_folder, "share", "swig", self.version )
+        bindir = os.path.join(self.package_folder, "bin")
+        self.output.info('Appending PATH environment variable: {}'.format(bindir))
+        self.env_info.PATH.append(bindir)
+
+        swig_lib_path = os.path.join(self.package_folder, "share", "swig", self.version)
+        self.output.info('Appending SWIG_LIB environment variable: {}'.format(swig_lib_path))
+        self.env_info.SWIG_LIB = swig_lib_path
