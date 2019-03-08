@@ -2,8 +2,7 @@
 
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.util.env_reader import get_env
-import os 
-import shutil
+import os
 import tempfile
 
 
@@ -28,7 +27,7 @@ class SwigConan(ConanFile):
             url = "http://prdownloads.sourceforge.net/swig/swigwin-{}.zip".format(self.version)
             sha256 = "21ce6cbe297a56b697ef6e7e92a83e75ca41dedc87e48282ab444591986c35f5"
 
-            self._download_cache_rename(url, sha256, filename, target_folder, "swigwin-{}".format(self.version), self._source_subfolder)
+            self._download_cache_rename(url, sha256, filename, target_folder, "swigwin-{}".format(self.version), self._source_subfolder, z=True)
         else:
             filename = "{}-rel-{}.tar.gz".format("swig", self.version)
             url = "https://github.com/swig/swig/archive/rel-{}.tar.gz".format(self.version)
@@ -36,7 +35,7 @@ class SwigConan(ConanFile):
 
             self._download_cache_rename(url, sha256, filename, target_folder, "{}-rel-{}".format("swig", self.version), self._source_subfolder)
 
-    def _download_cache_rename(self, url, sha256, filename, target_folder, rename_from, rename_to):
+    def _download_cache_rename(self, url, sha256, filename, target_folder, rename_from, rename_to, z=False):
         dlfilepath = os.path.join(tempfile.gettempdir(), filename)
         if os.path.exists(dlfilepath) and not get_env("SWIG_INSTALLER_FORCE_DOWNLOAD", False):
             self.output.info("Skipping download. Using cached {}".format(dlfilepath))
@@ -44,19 +43,18 @@ class SwigConan(ConanFile):
             self.output.info("Downloading {} from {}".format(self.name, url))
             tools.download(url, dlfilepath)
         tools.check_sha256(dlfilepath, sha256)
-        tools.untargz(dlfilepath, destination=target_folder)
+        if z:
+            tools.unzip(dlfilepath, destination=target_folder, keep_permissions=True)
+        else:
+            tools.untargz(dlfilepath, destination=target_folder)
         os.rename(os.path.join(target_folder, rename_from), os.path.join(target_folder, rename_to))
 
     def build_requirements(self):
+        self.build_requires("pcre/8.41@bincrafters/stable")
         if tools.os_info.is_windows:
             self.build_requires("msys2_installer/latest@bincrafters/stable")
-        if self.settings.os_build != "Windows":
-            self.build_requires("pcre/8.41@bincrafters/stable")
-            if tools.os_info.is_windows:
-                pass
-            else:
-                self.build_requires("bison_installer/3.3.2@bincrafters/stable")
-                # self.build_requires("bison/3.3.2@bincrafters/stable")
+        else:
+            self.build_requires("bison_installer/3.3.2@bincrafters/stable")
 
     def system_requirements(self):
         if self.develop:
@@ -69,38 +67,37 @@ class SwigConan(ConanFile):
                 for package in packages:
                     installer.install(package)
 
-
     def build(self):
         self._fetch_sources(self.build_folder)
-        if self.settings.os_build == "Windows":
-            pass
-        else:
-            env_build = AutoToolsBuildEnvironment(self)
+
+        if self.settings.os_build != "Windows":
             with tools.chdir(os.path.join(self.build_folder, self._source_subfolder)):
                 self.run('./autogen.sh')
-            args = [
-                "PCRE_LIBS={}".format(" ".join("-l{}".format(lib) for lib in self.deps_cpp_info["pcre"].libs)),
-                "PCRE_CPPFLAGS={}".format(""),
-            ]
-            env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
-            env_build.make()
+
+        pcre_cppflags = list("-D{}".format(d) for d in self.deps_cpp_info["pcre"].defines) \
+                        + self.deps_cpp_info["pcre"].cflags \
+                        + self.deps_cpp_info["pcre"].cxxflags
+        env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
+        args = [
+            "PCRE_LIBS={}".format(" ".join("-l{}".format(lib) for lib in self.deps_cpp_info["pcre"].libs)),
+            "PCRE_CPPFLAGS=\"{}\"".format(" ".join(pcre_cppflags)),
+        ]
+        env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
+        env_build.make()
+
+    @property
+    def _exe_extension(self):
+        return ".exe" if self.settings.os_build == "Windows" else ""
 
     def package(self):
+        with tools.chdir(self.build_folder):
+            env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
+            env_build.install()
+            with tools.chdir(os.path.join(self.package_folder, "bin")):
+                self.run("strip swig{}".format(self._exe_extension))
+                self.run("strip ccache-swig{}".format(self._exe_extension))
+
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        if self.settings.os_build == "Windows":
-            self.copy("swig.exe", )
-            if not os.path.exists(os.path.join(self.build_folder,"bin", "swig.exe")):
-                os.makedirs(os.path.join(self.build_folder,"bin"))
-                shutil.copyfile(os.path.join(self._source_subfolder,"swig.exe"), os.path.join(self.build_folder, "bin", "swig.exe"))
-                os.makedirs(os.path.join(self.build_folder,"share","swig"))
-                shutil.copytree(os.path.join(self._source_subfolder,"Lib"), os.path.join(self.build_folder, "share", "swig", self.version))
-        else:
-            with tools.chdir(self.build_folder):
-                env_build = AutoToolsBuildEnvironment(self)
-                env_build.install()
-                with tools.chdir(os.path.join(self.package_folder, "bin")):
-                    self.run("strip swig")
-                    self.run("strip ccache-swig")
 
     def package_id(self):
         del self.info.settings.compiler
