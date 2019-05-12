@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from bincrafters import build_template_installer
-from conans.client.tools.oss import detected_os
+from bincrafters import build_template_installer, build_shared
 import os
 
 
 if __name__ == "__main__":
-    arch_str = os.environ.get("ARCH", "x86,x86_64")
-    archs = arch_str.split(",")
+    arch = os.environ["ARCH"]
 
     builder = build_template_installer.get_builder()
-    for arch in archs:
-        builder.add(settings={"os_build": detected_os(), "arch_build": arch, })
+    builder.add(settings={"os": build_shared.get_os(), "arch_build": arch, })
     builder.run()

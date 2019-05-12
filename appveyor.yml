@@ -5,6 +5,7 @@ environment:
 
     matrix:
         - MINGW_CONFIGURATIONS: '7@x86_64@seh@posix'
+          ARCH: x86
 
 install:
   - set PATH=%PYTHON%;%PYTHON%/Scripts/;%PATH%
