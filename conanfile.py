@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
-import os 
-import shutil
+import os
 
 
 class SwigConan(ConanFile):
@@ -10,17 +9,19 @@ class SwigConan(ConanFile):
     version = "4.0.0"
     description = "SWIG is a software development tool that connects programs written in C and C++ with a variety of high-level programming languages."
 
-    topics = ("conan", "swig", "python", "java", "wrapper")
+    topics = ("conan", "swig", "python", "java", "wrapper", )
     url = "https://github.com/ss1978/conan-swig.git"
     homepage = "http://www.swig.org"
     author = "bincrafters <bincrafters@gmail.com>"
     license = "GPL-3.0"
     exports = ["LICENSE.md"]
     settings = "os_build", "arch_build", "compiler",
+
     _source_subfolder = "source_subfolder"
 
     def package_id(self):
         del self.info.settings.compiler
+        self.info.include_build_settings()
 
     def build_requirements(self):
         if tools.os_info.is_windows:
@@ -45,7 +46,7 @@ class SwigConan(ConanFile):
     def source(self):
         url = "https://github.com/swig/swig/archive/rel-{}.tar.gz".format(self.version)
         sha256 = "ab5cbf226ec50855aeca08193fbaafe92fe99b2454848b82f444ec96aa246b47"
-        foldername = "{}-rel-{}".format("swig", self.version)
+        foldername = "swig-rel-{}".format(self.version)
 
         tools.get(url, sha256=sha256)
         os.rename(foldername, self._source_subfolder)
