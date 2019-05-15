@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
+from conans.errors import ConanInvalidConfiguration
 import os
 
 
@@ -15,12 +16,20 @@ class SwigConan(ConanFile):
     author = "bincrafters <bincrafters@gmail.com>"
     license = "GPL-3.0"
     exports = ["LICENSE.md"]
-    settings = "os_build", "arch_build", "compiler",
+    settings = "os_build", "arch_build", "compiler", "os", "arch"
 
     _source_subfolder = "source_subfolder"
 
+    def configure(self):
+        if str(self.settings.os_build) != str(self.settings.os):
+            raise ConanInvalidConfiguration("settings.os_build must be equal to settings.os")
+        if str(self.settings.arch_build) != str(self.settings.arch_build):
+            raise ConanInvalidConfiguration("settings.arch_build must be equal to settings.arch_build")
+
     def package_id(self):
         del self.info.settings.compiler
+        del self.info.settings.os
+        del self.info.settings.arch
         self.info.include_build_settings()
 
     def build_requirements(self):
