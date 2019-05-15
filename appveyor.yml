@@ -5,6 +5,7 @@ environment:
 
     matrix:
         - MINGW_CONFIGURATIONS: '7@x86_64@seh@posix'
+          CONAN_GCC_VERSIONS: 7
           ARCH: x86_64
 
 install:
