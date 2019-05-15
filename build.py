@@ -9,5 +9,5 @@ if __name__ == "__main__":
     arch = os.environ["ARCH"]
 
     builder = build_template_installer.get_builder()
-    builder.add(settings={"os": build_shared.get_os(), "arch_build": arch, })
+    builder.add(settings={"os_build": build_shared.get_os(), "arch_build": arch, })
     builder.run()
