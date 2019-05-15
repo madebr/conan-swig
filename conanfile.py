@@ -20,13 +20,13 @@ class SwigConan(ConanFile):
     _source_subfolder = "source_subfolder"
 
     def build_requirements(self):
+        if tools.os_info.is_windows:
+            self.build_requires("msys2_installer/20161025@bincrafters/stable")
         if self.settings.os_build == "Windows":
             self.build_requires("winflexbison/2.5.18@bincrafters/stable")
         else:
             self.build_requires("bison_installer/3.3.2@bincrafters/stable")
         self.build_requires("pcre/8.41@bincrafters/stable")
-        if tools.os_info.is_windows:
-            self.build_requires("msys2_installer/20161025@bincrafters/stable")
 
     def system_requirements(self):
         if self.develop:
