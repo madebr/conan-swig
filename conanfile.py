@@ -16,8 +16,11 @@ class SwigConan(ConanFile):
     author = "bincrafters <bincrafters@gmail.com>"
     license = "GPL-3.0"
     exports = ["LICENSE.md"]
-    settings = "os_build", "arch_build",
+    settings = "os_build", "arch_build", "compiler",
     _source_subfolder = "source_subfolder"
+
+    def package_id(self):
+        del self.info.settings.compiler
 
     def build_requirements(self):
         if tools.os_info.is_windows:
