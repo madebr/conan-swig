@@ -72,12 +72,7 @@ class SwigConan(ConanFile):
             "--host={}".format(tools.detected_architecture()),
             "--enable-cpp11-testing",
         ]
-        try:
-            env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
-        except:
-            self.output.error("Output of config.log:")
-            self.output.error(open("config.log").read())
-            raise
+        env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
         env_build.make()
 
     def package(self):
