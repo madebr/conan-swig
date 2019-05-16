@@ -43,7 +43,7 @@ class SwigConan(ConanFile):
             self.build_requires("bison_installer/3.3.2@bincrafters/stable")
         self.build_requires("pcre/8.41@bincrafters/stable")
         if self.settings.compiler == "Visual Studio":
-            self.build_requires("cccl/1.0@bincrafters/stable")
+            self.build_requires("cccl_installer/1.0@bincrafters/stable")
 
     def system_requirements(self):
         if self.develop:
