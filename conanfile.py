@@ -80,7 +80,7 @@ class SwigConan(ConanFile):
         deps_libpaths = env_build.library_paths
         deps_libs = env_build.libs
         deps_defines = env_build.defines
-        if self.settings.compiler != "Visual Studio":
+        if self.settings.os_build == "Windows" and self.settings.compiler != "Visual Studio":
             env_build.link_flags.append("-static")
 
         libargs = list("-L\"{}\"".format(p) for p in deps_libpaths) + list("-l\"{}\"".format(l) for l in deps_libs)
