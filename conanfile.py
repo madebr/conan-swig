@@ -2,6 +2,7 @@
 
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.errors import ConanInvalidConfiguration
+from contextlib import contextmanager
 import os
 
 
@@ -41,6 +42,8 @@ class SwigConan(ConanFile):
         else:
             self.build_requires("bison_installer/3.3.2@bincrafters/stable")
         self.build_requires("pcre/8.41@bincrafters/stable")
+        if self.settings.compiler == "Visual Studio":
+            self.build_requires("cccl/1.0@bincrafters/stable")
 
     def system_requirements(self):
         if self.develop:
@@ -61,29 +64,49 @@ class SwigConan(ConanFile):
         tools.get(url, sha256=sha256)
         os.rename(foldername, self._source_subfolder)
 
+    @contextmanager
+    def _build_environment(self):
+        if self.settings.compiler == "Visual Studio":
+            with tools.vcvars(self.settings):
+                yield
+        else:
+            yield
+
     def build(self):
         with tools.chdir(os.path.join(self.build_folder, self._source_subfolder)):
             self.run('./autogen.sh', win_bash=tools.os_info.is_windows)
         env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-        if tools.os_info.is_windows:
+
+        deps_libpaths = env_build.library_paths
+        deps_libs = env_build.libs
+        deps_defines = env_build.defines
+        if self.settings.compiler != "Visual Studio":
             env_build.link_flags.append("-static")
+
+        libargs = list("-L\"{}\"".format(p) for p in deps_libpaths) + list("-l\"{}\"".format(l) for l in deps_libs)
         args = [
-            "PCRE_LIBS={}".format(" ".join("-l{}".format(lib) for lib in self.deps_cpp_info["pcre"].libs)),
-            "PCRE_CPPFLAGS={}".format(" ".join("-D{}".format(define) for define in self.deps_cpp_info["pcre"].defines)),
+            "PCRE_LIBS={}".format(" ".join(libargs)),
+            "PCRE_CPPFLAGS={}".format(" ".join("-D{}".format(define) for define in deps_defines)),
             "--host={}".format(tools.detected_architecture()),
-            "--enable-cpp11-testing",
         ]
-        env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
-        env_build.make()
+        if self.settings.compiler == "Visual Studio":
+            self.output.warn("Visual Studio compiler cannot create ccache-swig. Disabling ccache-swig.")
+            args.append("--disable-ccache")
+        with self._build_environment():
+            env_build.configure(configure_dir=os.path.join(self.build_folder, self._source_subfolder), args=args)
+            with tools.environment_append({"CONAN_CPU_COUNT": "1" if self.settings.compiler == "Visual Studio" else str(tools.cpu_count())}):
+                env_build.make()
 
     def package(self):
         with tools.chdir(self.build_folder):
             env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
             env_build.install()
-            with tools.chdir(os.path.join(self.package_folder, "bin")):
-                ext = ".exe" if tools.os_info.is_windows else ""
-                self.run("strip swig{}".format(ext), win_bash=tools.os_info.is_windows)
-                self.run("strip ccache-swig{}".format(ext), win_bash=tools.os_info.is_windows)
+
+            if self.settings.compiler != "Visual Studio":
+                with tools.chdir(os.path.join(self.package_folder, "bin")):
+                    ext = ".exe" if tools.os_info.is_windows else ""
+                    self.run("strip swig{}".format(ext), win_bash=tools.os_info.is_windows)
+                    self.run("strip ccache-swig{}".format(ext), win_bash=tools.os_info.is_windows)
 
     def package_info(self):
         bindir = os.path.join(self.package_folder, "bin")
