@@ -14,7 +14,7 @@ class SwigConan(ConanFile):
     topics = ("conan", "swig", "python", "java", "wrapper", )
     url = "https://github.com/ss1978/conan-swig.git"
     homepage = "http://www.swig.org"
-    author = "bincrafters <bincrafters@gmail.com>"
+    author = "Bincrafters <bincrafters@gmail.com>"
     license = "GPL-3.0"
     exports = ["LICENSE.md"]
     settings = "os_build", "arch_build", "compiler", "os", "arch"
