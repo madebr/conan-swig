@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.errors import ConanInvalidConfiguration
 from contextlib import contextmanager
@@ -10,12 +8,11 @@ class SwigConan(ConanFile):
     name = "swig_installer"
     version = "4.0.0"
     description = "SWIG is a software development tool that connects programs written in C and C++ with a variety of high-level programming languages."
-
-    topics = ("conan", "swig", "python", "java", "wrapper", )
-    url = "https://github.com/ss1978/conan-swig.git"
+    topics = ("conan", "swig", "python", "java", "wrapper")
+    url = "https://github.com/bincrafters/conan-swig_installer"
     homepage = "http://www.swig.org"
     author = "Bincrafters <bincrafters@gmail.com>"
-    license = "GPL-3.0"
+    license = "GPL-3.0-or-later"
     exports = ["LICENSE.md"]
     settings = "os_build", "arch_build", "compiler", "os", "arch"
 
@@ -98,6 +95,8 @@ class SwigConan(ConanFile):
                 env_build.make()
 
     def package(self):
+        self.copy(pattern="LICENSE*", dst="licenses", src=self._source_subfolder)
+        self.copy(pattern="COPYRIGHT", dst="licenses", src=self._source_subfolder)
         with tools.chdir(self.build_folder):
             env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
             env_build.install()
