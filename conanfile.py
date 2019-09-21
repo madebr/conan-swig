@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.errors import ConanInvalidConfiguration
 from contextlib import contextmanager
@@ -8,7 +6,7 @@ import os
 
 class SwigConan(ConanFile):
     name = "swig_installer"
-    version = "4.0.0"
+    version = "4.0.1"
     description = "SWIG is a software development tool that connects programs written in C and C++ with a variety of high-level programming languages."
 
     topics = ("conan", "swig", "python", "java", "wrapper", )
@@ -43,7 +41,7 @@ class SwigConan(ConanFile):
             self.build_requires("bison_installer/3.3.2@bincrafters/stable")
         self.build_requires("pcre/8.41@bincrafters/stable")
         if self.settings.compiler == "Visual Studio":
-            self.build_requires("cccl_installer/1.0@bincrafters/stable")
+            self.build_requires("cccl_installer/1.1@bincrafters/stable")
 
     def system_requirements(self):
         if self.develop:
