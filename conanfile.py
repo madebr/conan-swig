@@ -6,7 +6,7 @@ import os
 
 class SwigConan(ConanFile):
     name = "swig_installer"
-    version = "4.0.0"
+    version = "4.0.1"
     description = "SWIG is a software development tool that connects programs written in C and C++ with a variety of high-level programming languages."
     topics = ("conan", "swig", "python", "java", "wrapper")
     url = "https://github.com/bincrafters/conan-swig_installer"
@@ -55,7 +55,7 @@ class SwigConan(ConanFile):
 
     def source(self):
         url = "https://github.com/swig/swig/archive/rel-{}.tar.gz".format(self.version)
-        sha256 = "ab5cbf226ec50855aeca08193fbaafe92fe99b2454848b82f444ec96aa246b47"
+        sha256 = "2eaf6fb89d071d1be280bf995c63360b3729860c0da64948123b5d7e4cfb6cb7"
         foldername = "swig-rel-{}".format(self.version)
 
         tools.get(url, sha256=sha256)
