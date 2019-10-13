@@ -33,12 +33,12 @@ class SwigConan(ConanFile):
 
     def build_requirements(self):
         if tools.os_info.is_windows:
-            self.build_requires("msys2_installer/20161025@bincrafters/stable")
+            self.build_requires("msys2/20161025")
         if self.settings.os_build == "Windows":
             self.build_requires("winflexbison/2.5.18@bincrafters/stable")
         else:
             self.build_requires("bison_installer/3.3.2@bincrafters/stable")
-        self.build_requires("pcre/8.41@bincrafters/stable")
+        self.build_requires("pcre/8.41")
         if self.settings.compiler == "Visual Studio":
             self.build_requires("cccl_installer/1.0@bincrafters/stable")
 
