@@ -69,7 +69,13 @@ class SwigConan(ConanFile):
         else:
             yield
 
+    def _patch_sources(self):
+        tools.replace_in_file(os.path.join(self._source_subfolder, "configure.ac"),
+                              "AC_DEFINE_UNQUOTED(SWIG_LIB_WIN_UNIX",
+                              "SWIG_LIB_WIN_UNIX=""\nAC_DEFINE_UNQUOTED(SWIG_LIB_WIN_UNIX")
+
     def build(self):
+        self._patch_sources()
         with tools.chdir(os.path.join(self.build_folder, self._source_subfolder)):
             self.run('./autogen.sh', win_bash=tools.os_info.is_windows)
         env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
