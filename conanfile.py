@@ -2,6 +2,7 @@ from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.errors import ConanInvalidConfiguration
 from contextlib import contextmanager
 import os
+import shutil
 
 
 class SwigConan(ConanFile):
@@ -106,6 +107,10 @@ class SwigConan(ConanFile):
         with tools.chdir(self.build_folder):
             env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
             env_build.install()
+            if self.settings.os == "Windows":
+                shutil.move(os.path.join(self.package_folder, "share", "swig", self.version),
+                            os.path.join(self.package_folder, "bin", "Lib"))
+                shutil.rmtree(os.path.join(self.package_folder, "share"))
 
             if self.settings.compiler != "Visual Studio":
                 with tools.chdir(os.path.join(self.package_folder, "bin")):
@@ -118,7 +123,10 @@ class SwigConan(ConanFile):
         self.output.info('Appending PATH environment variable: {}'.format(bindir))
         self.env_info.PATH.append(bindir)
 
-        swig_lib_path = os.path.join(self.package_folder, "share", "swig", self.version)
+        if self.settings.os == "Windows":
+            swig_lib_path = os.path.join(self.package_folder, "bin", "Lib")
+        else:
+            swig_lib_path = os.path.join(self.package_folder, "share", "swig", self.version)
         self.output.info('Setting SWIG_LIB environment variable: {}'.format(swig_lib_path))
         self.env_info.SWIG_LIB = swig_lib_path
 
