@@ -1,6 +1,7 @@
 from conans import ConanFile, tools, AutoToolsBuildEnvironment
 from conans.errors import ConanInvalidConfiguration
 from contextlib import contextmanager
+import glob
 import os
 import shutil
 
@@ -15,6 +16,7 @@ class SwigConan(ConanFile):
     author = "Bincrafters <bincrafters@gmail.com>"
     license = "GPL-3.0-or-later"
     exports = ["LICENSE.md"]
+    exports_sources = "patches/*.patch"
     settings = "os_build", "arch_build", "compiler", "os", "arch"
 
     _source_subfolder = "source_subfolder"
@@ -74,6 +76,8 @@ class SwigConan(ConanFile):
         tools.replace_in_file(os.path.join(self._source_subfolder, "configure.ac"),
                               "AC_DEFINE_UNQUOTED(SWIG_LIB_WIN_UNIX",
                               "SWIG_LIB_WIN_UNIX=""\nAC_DEFINE_UNQUOTED(SWIG_LIB_WIN_UNIX")
+        for patch in glob.glob(os.path.join("patches/*")):
+            tools.patch(patch_file=patch, base_path=self._source_subfolder)
 
     def build(self):
         self._patch_sources()
@@ -107,10 +111,10 @@ class SwigConan(ConanFile):
         with tools.chdir(self.build_folder):
             env_build = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
             env_build.install()
-            if self.settings.os == "Windows":
-                shutil.move(os.path.join(self.package_folder, "share", "swig", self.version),
-                            os.path.join(self.package_folder, "bin", "Lib"))
-                shutil.rmtree(os.path.join(self.package_folder, "share"))
+
+            shutil.move(os.path.join(self.package_folder, "share", "swig", self.version),
+                        os.path.join(self.package_folder, "bin", "Lib"))
+            shutil.rmtree(os.path.join(self.package_folder, "share"))
 
             if self.settings.compiler != "Visual Studio":
                 with tools.chdir(os.path.join(self.package_folder, "bin")):
@@ -123,10 +127,8 @@ class SwigConan(ConanFile):
         self.output.info('Appending PATH environment variable: {}'.format(bindir))
         self.env_info.PATH.append(bindir)
 
-        if self.settings.os == "Windows":
-            swig_lib_path = os.path.join(self.package_folder, "bin", "Lib")
-        else:
-            swig_lib_path = os.path.join(self.package_folder, "share", "swig", self.version)
+        swig_lib_path = os.path.join(self.package_folder, "bin", "Lib")
+
         self.output.info('Setting SWIG_LIB environment variable: {}'.format(swig_lib_path))
         self.env_info.SWIG_LIB = swig_lib_path
 
